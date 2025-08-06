@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Road Closure Dashboard</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,322 +11,490 @@
     <!-- Lucide Icons for modern icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* Custom font and minor style adjustments */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5; /* A slightly cooler gray background */
-        }
-        /* Style for the table headers */
-        th {
-            position: sticky;
-            top: 0;
-            background-color: #f9fafb;
-            z-index: 10;
-        }
-        /* Custom scrollbar for better aesthetics */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #a8a8a8; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-        .status-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
-        }
-        .filter-btn {
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            border: 1px solid transparent;
-        }
-        .filter-btn.active {
-            background-color: #3b82f6;
-            color: white;
-            border-color: #3b82f6;
-        }
-        .filter-btn:not(.active) {
-            background-color: white;
-            color: #374151;
-            border-color: #e5e7eb;
-        }
+      /* Custom font and minor style adjustments */
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f0f2f5;
+      }
+      /* Style for the table headers */
+      th {
+        position: sticky;
+        top: 0;
+        background-color: #f9fafb;
+        z-index: 10;
+      }
+      /* Custom scrollbar for better aesthetics */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #a8a8a8;
+        border-radius: 10px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+      .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+      }
+      .filter-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        border: 1px solid transparent;
+      }
+      .filter-btn.active {
+        background-color: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+      }
+      .filter-btn:not(.active) {
+        background-color: white;
+        color: #374151;
+        border-color: #e5e7eb;
+      }
     </style>
-</head>
-<body class="p-4 md:p-6">
+  </head>
 
+  <body class="p-4 md:p-6">
     <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <header class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+      <!-- Header -->
+      <header
+        class="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between"
+      >
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">
+            बाढी, पहिरो तथा अन्य कारणबाट राजमार्ग बन्द भएको अवस्था
+          </h1>
+          <p class="text-gray-500 mt-1">
+            Live Data from the Department of Roads
+          </p>
+        </div>
+        <div
+          id="lastUpdated"
+          class="text-sm text-gray-500 text-right mt-2 sm:mt-0"
+        ></div>
+      </header>
+
+      <!-- Loading and Error States -->
+      <div id="loader" class="text-center py-20">
+        <div
+          role="status"
+          class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+        ></div>
+        <p class="text-lg font-semibold mt-4">Loading Dashboard Data...</p>
+      </div>
+      <div
+        id="error"
+        class="hidden text-center py-10 bg-red-50 text-red-700 rounded-lg border border-red-200"
+      >
+        <p class="text-lg font-semibold">Failed to Load Data</p>
+        <p id="errorMessage" class="text-sm mt-1"></p>
+      </div>
+
+      <!-- Main Dashboard Content (hidden until data loads) -->
+      <main id="dashboardContent" class="hidden">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+          <div
+            class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4"
+          >
+            <div class="bg-blue-100 p-3 rounded-full">
+              <i data-lucide="siren" class="text-blue-600"></i>
+            </div>
             <div>
-                <h1 class="text-3xl font-bold text-gray-800">Road Closure Dashboard</h1>
-                <p class="text-gray-500 mt-1">Live Data from the Department of Roads</p>
+              <h2 class="text-sm font-medium text-gray-500">कुल संख्या</h2>
+              <p
+                id="totalIncidents"
+                class="text-3xl font-bold text-gray-800 mt-1"
+              >
+                0
+              </p>
             </div>
-            <div id="lastUpdated" class="text-sm text-gray-500 text-right mt-2 sm:mt-0"></div>
-        </header>
-
-        <!-- Loading and Error States -->
-        <div id="loader" class="text-center py-20">
-             <div role="status" class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
-            <p class="text-lg font-semibold mt-4">Loading Dashboard Data...</p>
+          </div>
+          <div
+            class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4"
+          >
+            <div class="bg-red-100 p-3 rounded-full">
+              <i data-lucide="x-circle" class="text-red-600"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-medium text-gray-500">अवरुद्व</h2>
+              <p id="fullyClosed" class="text-3xl font-bold text-gray-800 mt-1">
+                0
+              </p>
+            </div>
+          </div>
+          <div
+            class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4"
+          >
+            <div class="bg-yellow-100 p-3 rounded-full">
+              <i data-lucide="alert-triangle" class="text-yellow-600"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-medium text-gray-500">
+                एकतर्फी चालु रहेको
+              </h2>
+              <p
+                id="partiallyOpen"
+                class="text-3xl font-bold text-gray-800 mt-1"
+              >
+                0
+              </p>
+            </div>
+          </div>
+          <div
+            class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4"
+          >
+            <div class="bg-green-100 p-3 rounded-full">
+              <i data-lucide="check-circle-2" class="text-green-600"></i>
+            </div>
+            <div>
+              <h2 class="text-sm font-medium text-gray-500">
+                दुवैतर्फ सुचारु भएको
+              </h2>
+              <p id="fullyOpen" class="text-3xl font-bold text-gray-800 mt-1">
+                0
+              </p>
+            </div>
+          </div>
         </div>
-        <div id="error" class="hidden text-center py-10 bg-red-50 text-red-700 rounded-lg border border-red-200">
-            <p class="text-lg font-semibold">Failed to Load Data</p>
-            <p id="errorMessage" class="text-sm mt-1"></p>
+
+        <!-- Charts and Table Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <!-- Chart Section -->
+          <div class="lg:col-span-2">
+            <div
+              class="bg-white p-6 rounded-xl shadow-sm border border-gray-200"
+            >
+              <h2 class="text-xl font-bold text-gray-800 mb-4">विवरण</h2>
+              <div id="statusPieChart" class="flex justify-center"></div>
+              <a
+                href="https://docs.google.com/spreadsheets/d/1ruPA91gXRkV3yjbypXsDqUCzBE-7rUojUcJf8Rt_rKo/edit?pli=1&gid=0#gid=0"
+                target="_blank"
+                class="text-blue-500 hover:underline mt-4 block"
+              >
+                पुरा विवरण हेर्नुहोस
+              </a>
+            </div>
+          </div>
+
+          <!-- Data Table Section -->
+          <div
+            class="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-gray-200"
+          >
+            <div
+              class="flex flex-col md:flex-row justify-between items-center pb-4 border-b border-gray-200 mb-4 gap-4"
+            >
+              <h2 class="text-xl font-bold text-gray-800">Detailed Report</h2>
+              <input
+                type="text"
+                id="searchInput"
+                placeholder="Search table..."
+                class="w-full md:w-auto p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div id="filter-controls" class="flex flex-wrap gap-2 mb-4">
+              <button class="filter-btn active" data-status="all">All</button>
+              <button class="filter-btn" data-status="closed">Closed</button>
+              <button class="filter-btn" data-status="partial">Partial</button>
+              <button class="filter-btn" data-status="open">Open</button>
+            </div>
+            <div class="overflow-auto max-h-[600px]">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      S.N.
+                    </th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Road Name
+                    </th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      District
+                    </th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                    <th
+                      class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Closure Start
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="dataTable"
+                  class="bg-white divide-y divide-gray-200"
+                ></tbody>
+              </table>
+            </div>
+          </div>
         </div>
-
-        <!-- Main Dashboard Content (hidden until data loads) -->
-        <main id="dashboardContent" class="hidden">
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                    <div class="bg-blue-100 p-3 rounded-full"><i data-lucide="siren" class="text-blue-600"></i></div>
-                    <div><h2 class="text-sm font-medium text-gray-500">Total Incidents</h2><p id="totalIncidents" class="text-3xl font-bold text-gray-800 mt-1">0</p></div>
-                </div>
-                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                    <div class="bg-red-100 p-3 rounded-full"><i data-lucide="x-circle" class="text-red-600"></i></div>
-                    <div><h2 class="text-sm font-medium text-gray-500">Fully Closed</h2><p id="fullyClosed" class="text-3xl font-bold text-gray-800 mt-1">0</p></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                    <div class="bg-yellow-100 p-3 rounded-full"><i data-lucide="alert-triangle" class="text-yellow-600"></i></div>
-                    <div><h2 class="text-sm font-medium text-gray-500">Partially Open</h2><p id="partiallyOpen" class="text-3xl font-bold text-gray-800 mt-1">0</p></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                    <div class="bg-green-100 p-3 rounded-full"><i data-lucide="check-circle-2" class="text-green-600"></i></div>
-                    <div><h2 class="text-sm font-medium text-gray-500">Fully Open</h2><p id="fullyOpen" class="text-3xl font-bold text-gray-800 mt-1">0</p></div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex items-center gap-4">
-                    <div class="bg-gray-100 p-3 rounded-full"><i data-lucide="help-circle" class="text-gray-600"></i></div>
-                    <div><h2 class="text-sm font-medium text-gray-500">Unknown District</h2><p id="unknownDistrict" class="text-3xl font-bold text-gray-800 mt-1">0</p></div>
-                </div>
-            </div>
-
-            <!-- Charts and Table Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <!-- Chart Section -->
-                <div class="lg:col-span-2 flex flex-col gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                         <h2 class="text-xl font-bold text-gray-800 mb-4">Overall Status</h2>
-                         <div id="statusDonutChart" class="flex justify-center"></div>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                         <h2 class="text-xl font-bold text-gray-800 mb-4">Top 10 Affected Districts</h2>
-                         <div id="districtChart"></div>
-                    </div>
-                </div>
-
-                <!-- Data Table Section -->
-                <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div class="flex flex-col md:flex-row justify-between items-center pb-4 border-b border-gray-200 mb-4 gap-4">
-                        <h2 class="text-xl font-bold text-gray-800">Detailed Report</h2>
-                        <input type="text" id="searchInput" placeholder="Search table..." class="w-full md:w-auto p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                    </div>
-                    <div id="filter-controls" class="flex flex-wrap gap-2 mb-4">
-                        <button class="filter-btn active" data-status="all">All</button>
-                        <button class="filter-btn" data-status="closed">Closed</button>
-                        <button class="filter-btn" data-status="partial">Partial</button>
-                        <button class="filter-btn" data-status="open">Open</button>
-                    </div>
-                    <div class="overflow-auto max-h-[600px]">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.N.</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Road Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">District</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Closure Start</th>
-                                </tr>
-                            </thead>
-                            <tbody id="dataTable" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </main>
+      </main>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const USER_API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi56bAQOEQMQvp2c-Giwwq2Hd0SOawxfnP6ids7zrtKHSZBQTDiD1YxJlWVMnXEar92ypjaORFYCVulVKADLfBYlzQ9D3peTfkO0gcMK9vdxOdYEe6H14aXbl_BpZgddBfgr8U0gVNMleWmn05cGWromJQt3vVL3ZGmfhoNI6eV6PsCOg8V78WBjYOregNbw9GD5XyZBjkDu1VvvwCPt8Epo5F4ezk4p4lBGnsgUZUNGJ9NPc7F5G0JcO0Q8Rqnt8B2XiqFncgGGoJrr7hjJSjuada-cKipbNzOzH4J&lib=M9ciTQ5611vYC9a1fYIR-mj8gySKMS4Ym';
-            
-            // **UPDATED STATUS STRINGS** based on user's screenshots
-            const STATUS_CLOSED = 'अवरुद्ध';
-            const STATUS_PARTIAL = 'एकतर्फी चालु रहेको';
-            const STATUS_OPEN = 'दुवैतर्फ सुचारु भएको';
+      document.addEventListener("DOMContentLoaded", () => {
+        const USER_API_URL =
+          "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi56bAQOEQMQvp2c-Giwwq2Hd0SOawxfnP6ids7zrtKHSZBQTDiD1YxJlWVMnXEar92ypjaORFYCVulVKADLfBYlzQ9D3peTfkO0gcMK9vdxOdYEe6H14aXbl_BpZgddBfgr8U0gVNMleWmn05cGWromJQt3vVL3ZGmfhoNI6eV6PsCOg8V78WBjYOregNbw9GD5XyZBjkDu1VvvwCPt8Epo5F4ezk4p4lBGnsgUZUNGJ9NPc7F5G0JcO0Q8Rqnt8B2XiqFncgGGoJrr7hjJSjuada-cKipbNzOzH4J&lib=M9ciTQ5611vYC9a1fYIR-mj8gySKMS4Ym";
 
-            const loader = document.getElementById('loader');
-            const errorDiv = document.getElementById('error');
-            const errorMessageP = document.getElementById('errorMessage');
-            const dashboardContent = document.getElementById('dashboardContent');
-            const searchInput = document.getElementById('searchInput');
-            const filterControls = document.getElementById('filter-controls');
-            let allData = [];
+        // Status strings
+        const STATUS_CLOSED = "अवरुद्व";
+        const STATUS_PARTIAL = "एकतर्फी चालु रहेको";
+        const STATUS_OPEN = "दुवैतर्फ सुचारु भएको";
 
-            async function fetchData() {
-                try {
-                    const response = await fetch(USER_API_URL);
-                    if (!response.ok) throw new Error(`API returned status ${response.status}`);
-                    const data = await response.json();
-                    if (!Array.isArray(data)) throw new Error('API did not return a valid JSON array.');
-                    
-                    allData = data;
-                    processDashboard(allData);
+        const loader = document.getElementById("loader");
+        const errorDiv = document.getElementById("error");
+        const errorMessageP = document.getElementById("errorMessage");
+        const dashboardContent = document.getElementById("dashboardContent");
+        const searchInput = document.getElementById("searchInput");
+        const filterControls = document.getElementById("filter-controls");
+        let allData = [];
 
-                    loader.classList.add('hidden');
-                    dashboardContent.classList.remove('hidden');
-                    lucide.createIcons();
-                    document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleString()}`;
-                } catch (err) {
-                    console.error('Failed to fetch or process data:', err);
-                    loader.classList.add('hidden');
-                    errorDiv.classList.remove('hidden');
-                    errorMessageP.textContent = err.message;
-                }
+        async function fetchData() {
+          try {
+            const response = await fetch(USER_API_URL);
+            if (!response.ok)
+              throw new Error(`API returned status ${response.status}`);
+            const data = await response.json();
+            if (!Array.isArray(data))
+              throw new Error("API did not return a valid JSON array.");
+
+            // Filter out any entries with N/A values
+            allData = data.filter((item) => {
+              const roadNameValid =
+                item.roadName &&
+                String(item.roadName).trim().toLowerCase() !== "select" &&
+                String(item.roadName).trim().toLowerCase() !== "n/a";
+              const districtValid =
+                item.district &&
+                String(item.district).trim() !== "" &&
+                String(item.district).trim().toLowerCase() !== "n/a";
+              const statusValid =
+                item.currentStatus &&
+                String(item.currentStatus).trim() !== "" &&
+                String(item.currentStatus).trim().toLowerCase() !== "n/a";
+              return roadNameValid && districtValid && statusValid;
+            });
+
+            processDashboard(allData);
+
+            loader.classList.add("hidden");
+            dashboardContent.classList.remove("hidden");
+            lucide.createIcons();
+            document.getElementById(
+              "lastUpdated"
+            ).textContent = `Last updated: ${new Date().toLocaleString()}`;
+          } catch (err) {
+            console.error("Failed to fetch or process data:", err);
+            loader.classList.add("hidden");
+            errorDiv.classList.remove("hidden");
+            errorMessageP.textContent = err.message;
+          }
+        }
+
+        function processDashboard(data) {
+          let fullyClosedCount = 0,
+            partiallyOpenCount = 0,
+            fullyOpenCount = 0,
+            unknownStatusCount = 0;
+
+          data.forEach((item) => {
+            const status = item.currentStatus
+              ? String(item.currentStatus).trim()
+              : "";
+            if (status === STATUS_CLOSED) {
+              fullyClosedCount++;
+            } else if (status === STATUS_PARTIAL) {
+              partiallyOpenCount++;
+            } else if (status === STATUS_OPEN) {
+              fullyOpenCount++;
+            } else {
+              unknownStatusCount++;
             }
+          });
 
-            function processDashboard(data) {
-                let fullyClosedCount = 0, partiallyOpenCount = 0, fullyOpenCount = 0, unknownStatusCount = 0;
-                const districtCounts = {};
+          document.getElementById("totalIncidents").textContent = data.length;
+          document.getElementById("fullyClosed").textContent = fullyClosedCount;
+          document.getElementById("partiallyOpen").textContent =
+            partiallyOpenCount;
+          document.getElementById("fullyOpen").textContent = fullyOpenCount;
 
-                data.forEach(item => {
-                    const status = item.currentStatus ? String(item.currentStatus).trim() : '';
-                    if (status === STATUS_CLOSED) {
-                        fullyClosedCount++;
-                    } else if (status === STATUS_PARTIAL) {
-                        partiallyOpenCount++;
-                    } else if (status === STATUS_OPEN) {
-                        fullyOpenCount++;
-                    } else {
-                        unknownStatusCount++;
-                    }
+          renderStatusPieChart([
+            fullyClosedCount,
+            partiallyOpenCount,
+            fullyOpenCount,
+          ]);
+          populateTable(data);
+        }
 
-                    const district = item.district && String(item.district).trim() !== '' ? String(item.district).trim() : 'Unknown';
-                    districtCounts[district] = (districtCounts[district] || 0) + 1;
-                });
+        function renderStatusPieChart(statusData) {
+          const options = {
+            series: statusData,
+            chart: {
+              type: "pie",
+              height: 350,
+            },
+            labels: ["अवरुद्व", "एकतर्फी चालु", "दुवैतर्फ सुचारु"],
+            colors: ["#ef4444", "#f59e0b", "#22c55e"],
+            responsive: [
+              {
+                breakpoint: 480,
+                options: {
+                  chart: {
+                    width: 200,
+                  },
+                  legend: {
+                    position: "bottom",
+                  },
+                },
+              },
+            ],
+            legend: {
+              position: "bottom",
+              labels: {
+                colors: "#6b7280",
+                useSeriesColors: false,
+              },
+            },
+            dataLabels: {
+              enabled: true,
+              formatter: function (val) {
+                return Math.round(val) + "%";
+              },
+              style: {
+                fontSize: "12px",
+                fontWeight: "bold",
+                colors: ["#fff"],
+              },
+            },
+            tooltip: {
+              y: {
+                formatter: function (value, { seriesIndex, w }) {
+                  return (
+                    w.config.series[seriesIndex] +
+                    " roads (" +
+                    Math.round(value) +
+                    "%)"
+                  );
+                },
+              },
+            },
+          };
 
-                const unknownDistrictCount = districtCounts['Unknown'] || 0;
-                delete districtCounts['Unknown']; // Remove from chart data
+          const chartEl = document.querySelector("#statusPieChart");
+          chartEl.innerHTML = "";
+          const chart = new ApexCharts(chartEl, options);
+          chart.render();
+        }
 
-                document.getElementById('totalIncidents').textContent = data.length;
-                document.getElementById('fullyClosed').textContent = fullyClosedCount;
-                document.getElementById('partiallyOpen').textContent = partiallyOpenCount;
-                document.getElementById('fullyOpen').textContent = fullyOpenCount;
-                document.getElementById('unknownDistrict').textContent = unknownDistrictCount;
+        function getStatusBadge(status) {
+          const s = status ? String(status).trim() : "";
+          if (s === STATUS_CLOSED)
+            return '<span class="status-badge bg-red-100 text-red-800">Closed</span>';
+          if (s === STATUS_PARTIAL)
+            return '<span class="status-badge bg-yellow-100 text-yellow-800">Partial</span>';
+          if (s === STATUS_OPEN)
+            return '<span class="status-badge bg-green-100 text-green-800">Open</span>';
+          return `<span class="status-badge bg-gray-100 text-gray-800">${
+            s || "Unknown"
+          }</span>`;
+        }
 
-                renderStatusDonutChart([fullyClosedCount, partiallyOpenCount, fullyOpenCount]);
-                renderDistrictChart(districtCounts);
-                populateTable(data);
-            }
-
-            function renderStatusDonutChart(statusData) {
-                const options = {
-                    series: statusData,
-                    chart: { type: 'donut', height: 250 },
-                    labels: ['Fully Closed', 'Partially Open', 'Fully Open'],
-                    colors: ['#ef4444', '#f59e0b', '#22c55e'],
-                    legend: { position: 'bottom' },
-                    responsive: [{ breakpoint: 480, options: { chart: { width: 200 }, legend: { position: 'bottom' } } }]
-                };
-                const chartEl = document.querySelector("#statusDonutChart");
-                chartEl.innerHTML = '';
-                const chart = new ApexCharts(chartEl, options);
-                chart.render();
-            }
-
-            function renderDistrictChart(districtData) {
-                const sortedDistricts = Object.entries(districtData).sort(([,a],[,b]) => b-a);
-                const top10 = sortedDistricts.slice(0, 10);
-                const categories = top10.map(d => d[0]);
-                const seriesData = top10.map(d => d[1]);
-
-                const options = {
-                    series: [{ name: 'Incidents', data: seriesData }],
-                    chart: { type: 'bar', height: 250, toolbar: { show: false } },
-                    plotOptions: { bar: { horizontal: true, barHeight: '60%', borderRadius: 4 } },
-                    dataLabels: { enabled: true, textAnchor: 'start', style: { colors: ['#fff'] }, formatter: (val) => val, offsetX: 0 },
-                    xaxis: { categories: categories, labels: { show: false } },
-                    yaxis: { labels: { show: true, style: { fontSize: '12px' } } },
-                    grid: { xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
-                    tooltip: { y: { formatter: (val) => `${val} incidents` } },
-                    colors: ['#3b82f6']
-                };
-                const chartEl = document.querySelector("#districtChart");
-                chartEl.innerHTML = '';
-                const chart = new ApexCharts(chartEl, options);
-                chart.render();
-            }
-
-            function getStatusBadge(status) {
-                const s = status ? String(status).trim() : '';
-                if (s === STATUS_CLOSED) return '<span class="status-badge bg-red-100 text-red-800">Closed</span>';
-                if (s === STATUS_PARTIAL) return '<span class="status-badge bg-yellow-100 text-yellow-800">Partial</span>';
-                if (s === STATUS_OPEN) return '<span class="status-badge bg-green-100 text-green-800">Open</span>';
-                return `<span class="status-badge bg-gray-100 text-gray-800">${s || 'Unknown'}</span>`;
-            }
-
-            function populateTable(data) {
-                const tableBody = document.getElementById('dataTable');
-                tableBody.innerHTML = '';
-                if (data.length === 0) {
-                     tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No matching records found.</td></tr>`;
-                     return;
-                }
-                data.forEach(item => {
-                    const closureDate = item.closureStartTime ? new Date(item.closureStartTime.isoString).toLocaleDateString() : 'N/A';
-                    const roadName = (item.roadName && String(item.roadName).toLowerCase() !== 'select') ? item.roadName : 'N/A';
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-50';
-                    tr.innerHTML = `
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${item.serialNumber || ''}</td>
+        function populateTable(data) {
+          const tableBody = document.getElementById("dataTable");
+          tableBody.innerHTML = "";
+          if (data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No matching records found.</td></tr>`;
+            return;
+          }
+          data.forEach((item) => {
+            const closureDate = item.closureStartTime
+              ? new Date(item.closureStartTime.isoString).toLocaleDateString()
+              : "N/A";
+            const roadName =
+              item.roadName && String(item.roadName).toLowerCase() !== "select"
+                ? item.roadName
+                : "N/A";
+            const tr = document.createElement("tr");
+            tr.className = "hover:bg-gray-50";
+            tr.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${
+                          item.serialNumber || ""
+                        }</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900 font-medium">${roadName}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${item.district || 'N/A'}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm">${getStatusBadge(item.currentStatus)}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${
+                          item.district || "N/A"
+                        }</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm">${getStatusBadge(
+                          item.currentStatus
+                        )}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${closureDate}</td>
                     `;
-                    tableBody.appendChild(tr);
-                });
-            }
-            
-            function filterData(status) {
-                let filteredData = allData;
-                if (status !== 'all') {
-                    filteredData = allData.filter(item => {
-                        const s = item.currentStatus ? String(item.currentStatus).trim() : '';
-                        if (status === 'closed') return s === STATUS_CLOSED;
-                        if (status === 'partial') return s === STATUS_PARTIAL;
-                        if (status === 'open') return s === STATUS_OPEN;
-                        return false;
-                    });
-                }
-                populateTable(filteredData);
-            }
+            tableBody.appendChild(tr);
+          });
+        }
 
-            searchInput.addEventListener('keyup', () => {
-                const filter = searchInput.value.toLowerCase();
-                const filteredData = allData.filter(item => {
-                    return Object.values(item).some(val => 
-                        val && String(val).toLowerCase().includes(filter)
-                    );
-                });
-                populateTable(filteredData);
+        function filterData(status) {
+          let filteredData = allData;
+          if (status !== "all") {
+            filteredData = allData.filter((item) => {
+              const s = item.currentStatus
+                ? String(item.currentStatus).trim()
+                : "";
+              if (status === "closed") return s === STATUS_CLOSED;
+              if (status === "partial") return s === STATUS_PARTIAL;
+              if (status === "open") return s === STATUS_OPEN;
+              return false;
             });
+          }
+          populateTable(filteredData);
+        }
 
-            filterControls.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-                    e.target.classList.add('active');
-                    filterData(e.target.dataset.status);
-                }
-            });
-
-            fetchData();
+        searchInput.addEventListener("keyup", () => {
+          const filter = searchInput.value.toLowerCase();
+          const filteredData = allData.filter((item) => {
+            return Object.values(item).some(
+              (val) => val && String(val).toLowerCase().includes(filter)
+            );
+          });
+          populateTable(filteredData);
         });
+
+        filterControls.addEventListener("click", (e) => {
+          if (e.target.tagName === "BUTTON") {
+            document
+              .querySelectorAll(".filter-btn")
+              .forEach((btn) => btn.classList.remove("active"));
+            e.target.classList.add("active");
+            filterData(e.target.dataset.status);
+          }
+        });
+
+        fetchData();
+      });
     </script>
-</body>
+  </body>
 </html>
